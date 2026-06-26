@@ -32,7 +32,7 @@ public class EventFactory {
         if (category == null) {
             throw new IllegalArgumentException("Event category cannot be null");
         }
-        if (dateTimeRange.getStart().isBefore(LocalDateTime.now())) {
+        if (dateTimeRange.getStart().isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
             throw new IllegalArgumentException("Event start date cannot be in the past");
         }
 
@@ -49,7 +49,9 @@ public class EventFactory {
                 LocalDateTime.now(ZoneId.of("UTC"))
         );
 
-        EventCreated domainEvent = new EventCreated(event.getId(), event.getName(), LocalDateTime.now(ZoneId.of("UTC")));
+        EventCreated domainEvent =
+                new EventCreated(event.getId(), event.getName(), LocalDateTime.now(ZoneId.of("UTC")));
+
         return new Event.EventResult(event, List.of(domainEvent));
     }
 }
