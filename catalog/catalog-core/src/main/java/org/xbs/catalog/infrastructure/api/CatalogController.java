@@ -1,4 +1,4 @@
-package org.xbs.catalog.infrastructure.persistence.api;
+package org.xbs.catalog.infrastructure.api;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
