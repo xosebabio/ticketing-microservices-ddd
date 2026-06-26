@@ -1,4 +1,16 @@
 package org.xbs.catalog.api.dto;
 
-public class CreateEventDto {
+import java.time.LocalDateTime;
+
+public record CreateEventRequest(
+        String name,
+        String description,
+        String category,
+        int capacity,
+        LocalDateTime dateTime,
+        LocalDateTime endDateTime,
+        String venueName,
+        String address,
+        String city
+) {
 }
