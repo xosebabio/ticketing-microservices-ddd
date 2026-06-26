@@ -43,7 +43,7 @@ services:
   catalog-app:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: Dockerfile
     container_name: catalog-app
     ports:
       - "8080:8080"
