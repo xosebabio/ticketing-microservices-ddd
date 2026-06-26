@@ -5,9 +5,9 @@ import org.xbs.shared.domain.DomainEvent;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record EventSoldOut(
+public record EventCreated(
         UUID eventId,
         String eventName,
-        LocalDateTime soldOutAt
+        LocalDateTime occurredAt
 ) implements DomainEvent {
 }

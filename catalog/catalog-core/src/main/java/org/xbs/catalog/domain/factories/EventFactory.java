@@ -2,18 +2,20 @@ package org.xbs.catalog.domain.factories;
 
 import lombok.experimental.UtilityClass;
 import org.xbs.catalog.domain.entities.Event;
+import org.xbs.catalog.domain.events.EventCreated;
 import org.xbs.catalog.domain.valueobjects.Capacity;
 import org.xbs.catalog.domain.valueobjects.DateTimeRange;
 import org.xbs.catalog.domain.valueobjects.Venue;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.UUID;
 
 @UtilityClass
 public class EventFactory {
 
-    public Event createEvent(
+    public Event.EventResult createEvent(
             String name,
             String description,
             Event.Category category,
@@ -34,7 +36,7 @@ public class EventFactory {
             throw new IllegalArgumentException("Event start date cannot be in the past");
         }
 
-        return new Event(
+        Event event = new Event(
                 UUID.randomUUID(),
                 name,
                 category,
@@ -46,5 +48,8 @@ public class EventFactory {
                 LocalDateTime.now(ZoneId.of("UTC")),
                 LocalDateTime.now(ZoneId.of("UTC"))
         );
+
+        EventCreated domainEvent = new EventCreated(event.getId(), event.getName(), LocalDateTime.now(ZoneId.of("UTC")));
+        return new Event.EventResult(event, List.of(domainEvent));
     }
 }

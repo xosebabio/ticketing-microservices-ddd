@@ -1,7 +1,7 @@
 package org.xbs.catalog.domain.entities;
 
 import lombok.Value;
-import org.xbs.catalog.domain.events.DomainEvent;
+import org.xbs.shared.domain.DomainEvent;
 import org.xbs.catalog.domain.events.EventCancelled;
 import org.xbs.catalog.domain.events.EventPublished;
 import org.xbs.catalog.domain.events.EventSoldOut;

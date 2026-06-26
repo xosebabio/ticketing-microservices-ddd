@@ -1,8 +1,10 @@
 package org.xbs.catalog.domain.valueobjects;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
+@EqualsAndHashCode
 public class Capacity {
     private final int value;
 
@@ -13,16 +15,4 @@ public class Capacity {
         this.value = value;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Capacity capacity = (Capacity) o;
-        return value == capacity.value;
-    }
-
-    @Override
-    public int hashCode() {
-        return Integer.hashCode(value);
-    }
 }
