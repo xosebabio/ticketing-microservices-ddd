@@ -12,8 +12,6 @@ import org.xbs.shared.application.CommandHandler;
 import org.xbs.shared.domain.DomainEvent;
 import org.xbs.shared.messaging.EventPublisher;
 
-import java.util.List;
-
 @Component
 @RequiredArgsConstructor
 public class CreateEventCommandHandler implements CommandHandler<CreateEventCommand> {
@@ -34,14 +32,8 @@ public class CreateEventCommandHandler implements CommandHandler<CreateEventComm
 
         eventRepository.save(result.event());
 
-        List<DomainEvent> domainEvents = result.domainEvents();
-        for (DomainEvent domainEvent : domainEvents) {
-            String topic = resolveTopic(domainEvent);
-            eventPublisher.publish(topic, domainEvent);
+        for (DomainEvent domainEvent : result.domainEvents()) {
+            eventPublisher.publish(domainEvent);
         }
-    }
-
-    private String resolveTopic(DomainEvent domainEvent) {
-        return "catalog." + domainEvent.getClass().getSimpleName().toLowerCase();
     }
 }
