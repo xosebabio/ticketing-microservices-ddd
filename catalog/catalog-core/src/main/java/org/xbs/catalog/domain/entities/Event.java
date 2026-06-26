@@ -1,40 +1,120 @@
 package org.xbs.catalog.domain.entities;
 
+import lombok.Value;
+import org.xbs.catalog.domain.events.DomainEvent;
+import org.xbs.catalog.domain.events.EventCancelled;
+import org.xbs.catalog.domain.events.EventPublished;
+import org.xbs.catalog.domain.events.EventSoldOut;
+import org.xbs.catalog.domain.valueobjects.Capacity;
+import org.xbs.catalog.domain.valueobjects.DateTimeRange;
+import org.xbs.catalog.domain.valueobjects.Venue;
+
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
 import java.util.UUID;
 
+@Value
 public class Event {
 
-    enum Category{
+    public enum Category {
         MUSIC,
         TALK,
         COMEDY,
         SCIENCE
     }
 
-    enum Status{
+    public enum Status {
         DRAFT,
         PUBLISHED,
         CANCELLED,
         SOLD_OUT
     }
 
-    private UUID id;
+    public record EventResult(Event event, List<DomainEvent> domainEvents) {}
 
-    private String name;
+    UUID id;
+    String name;
+    Category category;
+    Capacity capacity;
+    DateTimeRange dateTimeRange;
+    String description;
+    Venue venue;
+    Status status;
+    LocalDateTime createdAt;
+    LocalDateTime modifiedAt;
 
-    private Category category;
+    public EventResult modifyEvent(
+            String name,
+            Category category,
+            Capacity capacity,
+            DateTimeRange dateTimeRange,
+            String description,
+            Venue venue
+    ) {
+        Event modified = new Event(
+                this.id,
+                name,
+                category,
+                capacity,
+                dateTimeRange,
+                description,
+                venue,
+                this.status,
+                this.createdAt,
+                LocalDateTime.now(ZoneId.of("UTC"))
+        );
+        return new EventResult(modified, List.of());
+    }
 
-    private Integer capacity;
+    public EventResult publish() {
+        Event published = new Event(
+                this.id,
+                this.name,
+                this.category,
+                this.capacity,
+                this.dateTimeRange,
+                this.description,
+                this.venue,
+                Status.PUBLISHED,
+                this.createdAt,
+                LocalDateTime.now(ZoneId.of("UTC"))
+        );
+        EventPublished event = new EventPublished(this.id, this.name, LocalDateTime.now(ZoneId.of("UTC")));
+        return new EventResult(published, List.of(event));
+    }
 
-    private LocalDateTime dateTime;
+    public EventResult cancel(String reason) {
+        Event cancelled = new Event(
+                this.id,
+                this.name,
+                this.category,
+                this.capacity,
+                this.dateTimeRange,
+                this.description,
+                this.venue,
+                Status.CANCELLED,
+                this.createdAt,
+                LocalDateTime.now(ZoneId.of("UTC"))
+        );
+        EventCancelled event = new EventCancelled(this.id, this.name, LocalDateTime.now(ZoneId.of("UTC")), reason);
+        return new EventResult(cancelled, List.of(event));
+    }
 
-    private LocalDateTime endDateTime;
-
-    private String description;
-
-    private String venue;
-
-    private Status status;
-
+    public EventResult soldOut() {
+        Event soldOut = new Event(
+                this.id,
+                this.name,
+                this.category,
+                this.capacity,
+                this.dateTimeRange,
+                this.description,
+                this.venue,
+                Status.SOLD_OUT,
+                this.createdAt,
+                LocalDateTime.now(ZoneId.of("UTC"))
+        );
+        EventSoldOut event = new EventSoldOut(this.id, this.name, LocalDateTime.now(ZoneId.of("UTC")));
+        return new EventResult(soldOut, List.of(event));
+    }
 }
