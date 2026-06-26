@@ -4,6 +4,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -12,6 +13,8 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.xbs.shared.messaging.DefaultTopicResolver;
+import org.xbs.shared.messaging.EventPublisher;
+import org.xbs.shared.messaging.KafkaEventPublisher;
 import org.xbs.shared.messaging.TopicResolver;
 
 import java.util.HashMap;
@@ -44,5 +47,14 @@ public class KafkaAutoConfiguration {
     @ConditionalOnMissingBean
     public TopicResolver topicResolver() {
         return new DefaultTopicResolver();
+    }
+
+    @Bean
+    @ConditionalOnBean(KafkaTemplate.class)
+    public EventPublisher eventPublisher(
+            KafkaTemplate<String, Object> kafkaTemplate,
+            TopicResolver topicResolver
+    ) {
+        return new KafkaEventPublisher(kafkaTemplate, topicResolver);
     }
 }
