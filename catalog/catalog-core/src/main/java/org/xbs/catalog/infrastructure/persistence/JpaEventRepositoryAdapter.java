@@ -29,6 +29,13 @@ public class JpaEventRepositoryAdapter implements EventRepository {
     }
 
     @Override
+    public List<Event> findAllNonDraft() {
+        return jpaEventRepository.findByStatusNot(Event.Status.DRAFT).stream()
+                .map(EventMapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public void save(Event event) {
         EventJpaEntity entity = EventMapper.toEntity(event);
         jpaEventRepository.save(entity);

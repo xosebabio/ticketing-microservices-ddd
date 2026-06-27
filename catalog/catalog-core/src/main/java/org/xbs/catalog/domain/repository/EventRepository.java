@@ -9,6 +9,7 @@ import java.util.UUID;
 public interface EventRepository {
     Optional<Event> findById(UUID id);
     List<Event> findAll();
+    List<Event> findAllNonDraft();
     void save(Event event);
     void delete(UUID id);
 }

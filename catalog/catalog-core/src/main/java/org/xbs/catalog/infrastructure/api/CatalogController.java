@@ -6,13 +6,22 @@ import org.springframework.web.bind.annotation.RestController;
 import org.xbs.catalog.api.CatalogApi;
 import org.xbs.catalog.api.dto.CancelEventRequest;
 import org.xbs.catalog.api.dto.CreateEventRequest;
+import org.xbs.catalog.api.dto.EventResponse;
+import org.xbs.catalog.api.dto.EventSummaryResponse;
 import org.xbs.catalog.api.dto.ModifyEventRequest;
+import org.xbs.catalog.application.dto.EventDto;
 import org.xbs.catalog.application.usecases.cancel.CancelEventCommand;
 import org.xbs.catalog.application.usecases.cancel.CancelEventCommandHandler;
 import org.xbs.catalog.application.usecases.create.CreateEventCommand;
 import org.xbs.catalog.application.usecases.create.CreateEventCommandHandler;
 import org.xbs.catalog.application.usecases.delete.DeleteEventCommand;
 import org.xbs.catalog.application.usecases.delete.DeleteEventCommandHandler;
+import org.xbs.catalog.application.usecases.find.FindAllEventsQuery;
+import org.xbs.catalog.application.usecases.find.FindAllEventsQueryHandler;
+import org.xbs.catalog.application.usecases.find.FindAllNonDraftEventsQuery;
+import org.xbs.catalog.application.usecases.find.FindAllNonDraftEventsQueryHandler;
+import org.xbs.catalog.application.usecases.find.FindEventByIdQuery;
+import org.xbs.catalog.application.usecases.find.FindEventByIdQueryHandler;
 import org.xbs.catalog.application.usecases.modify.ModifyEventCommand;
 import org.xbs.catalog.application.usecases.modify.ModifyEventCommandHandler;
 import org.xbs.catalog.application.usecases.publish.PublishEventCommand;
@@ -20,6 +29,7 @@ import org.xbs.catalog.application.usecases.publish.PublishEventCommandHandler;
 import org.xbs.catalog.domain.repository.EventRepository;
 import org.xbs.shared.messaging.EventPublisher;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -28,10 +38,40 @@ public class CatalogController implements CatalogApi {
 
     private final EventRepository eventRepository;
     private final EventPublisher eventPublisher;
+    private final FindEventByIdQueryHandler findEventByIdQueryHandler;
+    private final FindAllNonDraftEventsQueryHandler findAllNonDraftEventsQueryHandler;
+    private final FindAllEventsQueryHandler findAllEventsQueryHandler;
 
     @Override
     public ResponseEntity<String> getEvents() {
         return ResponseEntity.ok("It works!");
+    }
+
+    @Override
+    public ResponseEntity<EventResponse> getEventById(UUID id) {
+        FindEventByIdQuery query = new FindEventByIdQuery(id);
+        EventDto eventDto = findEventByIdQueryHandler.handle(query);
+        return ResponseEntity.ok(EventResponseMapper.toEventResponse(eventDto));
+    }
+
+    @Override
+    public ResponseEntity<List<EventSummaryResponse>> getActiveEvents() {
+        FindAllNonDraftEventsQuery query = new FindAllNonDraftEventsQuery();
+        List<EventDto> events = findAllNonDraftEventsQueryHandler.handle(query);
+        List<EventSummaryResponse> responses = events.stream()
+                .map(EventResponseMapper::toEventSummaryResponse)
+                .toList();
+        return ResponseEntity.ok(responses);
+    }
+
+    @Override
+    public ResponseEntity<List<EventResponse>> getAllEvents() {
+        FindAllEventsQuery query = new FindAllEventsQuery();
+        List<EventDto> events = findAllEventsQueryHandler.handle(query);
+        List<EventResponse> responses = events.stream()
+                .map(EventResponseMapper::toEventResponse)
+                .toList();
+        return ResponseEntity.ok(responses);
     }
 
     @Override

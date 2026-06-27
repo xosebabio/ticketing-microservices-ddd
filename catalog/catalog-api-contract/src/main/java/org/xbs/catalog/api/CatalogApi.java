@@ -10,8 +10,11 @@ import org.springframework.web.service.annotation.PostExchange;
 import org.springframework.web.service.annotation.PutExchange;
 import org.xbs.catalog.api.dto.CancelEventRequest;
 import org.xbs.catalog.api.dto.CreateEventRequest;
+import org.xbs.catalog.api.dto.EventResponse;
+import org.xbs.catalog.api.dto.EventSummaryResponse;
 import org.xbs.catalog.api.dto.ModifyEventRequest;
 
+import java.util.List;
 import java.util.UUID;
 
 @HttpExchange("/api/v1/catalog")
@@ -19,6 +22,15 @@ public interface CatalogApi {
 
     @GetExchange("/events")
     ResponseEntity<String> getEvents();
+
+    @GetExchange("/events/{id}")
+    ResponseEntity<EventResponse> getEventById(@PathVariable UUID id);
+
+    @GetExchange("/events/active")
+    ResponseEntity<List<EventSummaryResponse>> getActiveEvents();
+
+    @GetExchange("/events/all")
+    ResponseEntity<List<EventResponse>> getAllEvents();
 
     @PostExchange("/events")
     ResponseEntity<Void> createEvent(@RequestBody CreateEventRequest createEventRequest);
