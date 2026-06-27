@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.xbs.catalog.domain.events.EventCancelled;
+import org.xbs.catalog.domain.events.EventDeleted;
 import org.xbs.catalog.domain.events.EventPublished;
 import org.xbs.catalog.domain.events.EventSoldOut;
 import org.xbs.catalog.domain.testdata.DomainTestData;
@@ -14,6 +15,7 @@ import org.xbs.catalog.domain.valueobjects.Venue;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("Event Aggregate")
 class EventTest {
@@ -214,6 +216,70 @@ class EventTest {
             EventSoldOut soldOut = (EventSoldOut) result.domainEvents().get(0);
             assertThat(soldOut.eventId()).isEqualTo(event.getId());
             assertThat(soldOut.eventName()).isEqualTo(event.getName());
+        }
+    }
+
+    @Nested
+    @DisplayName("delete")
+    class Delete {
+
+        @Test
+        @DisplayName("should allow delete for DRAFT events")
+        void shouldAllowDeleteForDraftEvents() {
+            Event draft = DomainTestData.draftEvent();
+
+            Event.EventResult result = draft.delete();
+
+            assertThat(result.domainEvents()).hasSize(1);
+            assertThat(result.domainEvents().get(0)).isInstanceOf(EventDeleted.class);
+
+            EventDeleted deleted = (EventDeleted) result.domainEvents().get(0);
+            assertThat(deleted.eventId()).isEqualTo(draft.getId());
+            assertThat(deleted.eventName()).isEqualTo(draft.getName());
+        }
+
+        @Test
+        @DisplayName("should allow delete for CANCELLED events")
+        void shouldAllowDeleteForCancelledEvents() {
+            Event cancelled = DomainTestData.publishedEvent().cancel("reason").event();
+
+            Event.EventResult result = cancelled.delete();
+
+            assertThat(result.domainEvents()).hasSize(1);
+            assertThat(result.domainEvents().get(0)).isInstanceOf(EventDeleted.class);
+        }
+
+        @Test
+        @DisplayName("should throw exception when deleting PUBLISHED events")
+        void shouldThrowExceptionWhenDeletingPublishedEvents() {
+            Event published = DomainTestData.publishedEvent();
+
+            assertThatThrownBy(published::delete)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Only DRAFT or CANCELLED events can be deleted");
+        }
+
+        @Test
+        @DisplayName("should throw exception when deleting SOLD_OUT events")
+        void shouldThrowExceptionWhenDeletingSoldOutEvents() {
+            Event soldOut = DomainTestData.publishedEvent().soldOut().event();
+
+            assertThatThrownBy(soldOut::delete)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Only DRAFT or CANCELLED events can be deleted");
+        }
+
+        @Test
+        @DisplayName("should emit EventDeleted with correct data")
+        void shouldEmitEventDeletedWithCorrectData() {
+            Event draft = DomainTestData.draftEvent();
+
+            Event.EventResult result = draft.delete();
+
+            EventDeleted deleted = (EventDeleted) result.domainEvents().get(0);
+            assertThat(deleted.eventId()).isEqualTo(draft.getId());
+            assertThat(deleted.eventName()).isEqualTo(draft.getName());
+            assertThat(deleted.deletedAt()).isNotNull();
         }
     }
 }

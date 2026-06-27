@@ -3,6 +3,7 @@ package org.xbs.catalog.domain.entities;
 import lombok.Value;
 import org.xbs.shared.domain.DomainEvent;
 import org.xbs.catalog.domain.events.EventCancelled;
+import org.xbs.catalog.domain.events.EventDeleted;
 import org.xbs.catalog.domain.events.EventPublished;
 import org.xbs.catalog.domain.events.EventSoldOut;
 import org.xbs.catalog.domain.valueobjects.Capacity;
@@ -116,5 +117,13 @@ public class Event {
         );
         EventSoldOut event = new EventSoldOut(this.id, this.name, LocalDateTime.now(ZoneId.of("UTC")));
         return new EventResult(soldOut, List.of(event));
+    }
+
+    public EventResult delete() {
+        if (this.status != Status.DRAFT && this.status != Status.CANCELLED) {
+            throw new IllegalStateException("Only DRAFT or CANCELLED events can be deleted");
+        }
+        EventDeleted event = new EventDeleted(this.id, this.name, LocalDateTime.now(ZoneId.of("UTC")));
+        return new EventResult(this, List.of(event));
     }
 }
