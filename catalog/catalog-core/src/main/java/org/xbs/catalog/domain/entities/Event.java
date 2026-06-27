@@ -4,6 +4,7 @@ import lombok.Value;
 import org.xbs.shared.domain.DomainEvent;
 import org.xbs.catalog.domain.events.EventCancelled;
 import org.xbs.catalog.domain.events.EventDeleted;
+import org.xbs.catalog.domain.events.EventModified;
 import org.xbs.catalog.domain.events.EventPublished;
 import org.xbs.catalog.domain.events.EventSoldOut;
 import org.xbs.catalog.domain.valueobjects.Capacity;
@@ -53,6 +54,7 @@ public class Event {
             String description,
             Venue venue
     ) {
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("UTC"));
         Event modified = new Event(
                 this.id,
                 name,
@@ -63,12 +65,16 @@ public class Event {
                 venue,
                 this.status,
                 this.createdAt,
-                LocalDateTime.now(ZoneId.of("UTC"))
+                now
         );
-        return new EventResult(modified, List.of());
+        EventModified event = new EventModified(this.id, name, now);
+        return new EventResult(modified, List.of(event));
     }
 
     public EventResult publish() {
+        if (this.status != Status.DRAFT) {
+            throw new IllegalStateException("Only DRAFT events can be published");
+        }
         Event published = new Event(
                 this.id,
                 this.name,
@@ -86,6 +92,9 @@ public class Event {
     }
 
     public EventResult cancel(String reason) {
+        if (this.status != Status.PUBLISHED && this.status != Status.SOLD_OUT) {
+            throw new IllegalStateException("Only PUBLISHED or SOLD_OUT events can be cancelled");
+        }
         Event cancelled = new Event(
                 this.id,
                 this.name,

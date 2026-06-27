@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.xbs.catalog.domain.events.EventCancelled;
 import org.xbs.catalog.domain.events.EventDeleted;
+import org.xbs.catalog.domain.events.EventModified;
 import org.xbs.catalog.domain.events.EventPublished;
 import org.xbs.catalog.domain.events.EventSoldOut;
 import org.xbs.catalog.domain.testdata.DomainTestData;
@@ -74,8 +75,8 @@ class EventTest {
         }
 
         @Test
-        @DisplayName("should return empty domain events on modify")
-        void shouldReturnEmptyEventsOnModify() {
+        @DisplayName("should emit EventModified domain event")
+        void shouldEmitEventModified() {
             Event original = DomainTestData.draftEvent();
 
             Event.EventResult result = original.modifyEvent(
@@ -87,7 +88,12 @@ class EventTest {
                     original.getVenue()
             );
 
-            assertThat(result.domainEvents()).isEmpty();
+            assertThat(result.domainEvents()).hasSize(1);
+            assertThat(result.domainEvents().get(0)).isInstanceOf(EventModified.class);
+
+            EventModified modified = (EventModified) result.domainEvents().get(0);
+            assertThat(modified.eventId()).isEqualTo(original.getId());
+            assertThat(modified.eventName()).isEqualTo("Nuevo Nombre");
         }
     }
 
@@ -136,6 +142,26 @@ class EventTest {
             assertThat(published.getDescription()).isEqualTo(draft.getDescription());
             assertThat(published.getVenue()).isEqualTo(draft.getVenue());
             assertThat(published.getCreatedAt()).isEqualTo(draft.getCreatedAt());
+        }
+
+        @Test
+        @DisplayName("should throw exception when publishing non-DRAFT events")
+        void shouldThrowExceptionWhenPublishingNonDraftEvents() {
+            Event published = DomainTestData.publishedEvent();
+
+            assertThatThrownBy(published::publish)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Only DRAFT events can be published");
+        }
+
+        @Test
+        @DisplayName("should throw exception when publishing CANCELLED events")
+        void shouldThrowExceptionWhenPublishingCancelledEvents() {
+            Event cancelled = DomainTestData.publishedEvent().cancel("reason").event();
+
+            assertThatThrownBy(cancelled::publish)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Only DRAFT events can be published");
         }
     }
 
@@ -186,6 +212,38 @@ class EventTest {
             assertThat(cancelled.getDescription()).isEqualTo(event.getDescription());
             assertThat(cancelled.getVenue()).isEqualTo(event.getVenue());
             assertThat(cancelled.getCreatedAt()).isEqualTo(event.getCreatedAt());
+        }
+
+        @Test
+        @DisplayName("should allow cancel for SOLD_OUT events")
+        void shouldAllowCancelForSoldOutEvents() {
+            Event soldOut = DomainTestData.publishedEvent().soldOut().event();
+
+            Event.EventResult result = soldOut.cancel("Motivo");
+
+            assertThat(result.event().getStatus()).isEqualTo(Event.Status.CANCELLED);
+            assertThat(result.domainEvents()).hasSize(1);
+            assertThat(result.domainEvents().get(0)).isInstanceOf(EventCancelled.class);
+        }
+
+        @Test
+        @DisplayName("should throw exception when cancelling DRAFT events")
+        void shouldThrowExceptionWhenCancellingDraftEvents() {
+            Event draft = DomainTestData.draftEvent();
+
+            assertThatThrownBy(() -> draft.cancel("Motivo"))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Only PUBLISHED or SOLD_OUT events can be cancelled");
+        }
+
+        @Test
+        @DisplayName("should throw exception when cancelling already CANCELLED events")
+        void shouldThrowExceptionWhenCancellingAlreadyCancelledEvents() {
+            Event cancelled = DomainTestData.publishedEvent().cancel("Motivo").event();
+
+            assertThatThrownBy(() -> cancelled.cancel("Otro motivo"))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Only PUBLISHED or SOLD_OUT events can be cancelled");
         }
     }
 
