@@ -1,6 +1,7 @@
 package org.xbs.catalog.infrastructure.api;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.xbs.catalog.api.CatalogApi;
@@ -92,7 +93,7 @@ public class CatalogController implements CatalogApi {
                 new CreateEventCommandHandler(eventRepository, eventPublisher);
 
         createEventCommandHandler.handle(createEventCommand);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Override
