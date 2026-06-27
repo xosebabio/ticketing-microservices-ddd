@@ -44,10 +44,10 @@ services:
   catalog-app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: catalog/Dockerfile
     container_name: catalog-app
     ports:
-      - "8080:8080"
+      - "8081:8081"
     environment:
       SPRING_PROFILES_ACTIVE: docker
     depends_on:
@@ -55,6 +55,18 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - catalog-app
 
 volumes:
   postgres_data:
